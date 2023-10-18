@@ -30,8 +30,8 @@
             this.TextBoxEnderecoServidor = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.TextBoxHistorico = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.TextBoxHistorico = new System.Windows.Forms.RichTextBox();
             this.TextBoxMensagem = new System.Windows.Forms.TextBox();
             this.ButtonEnviarMensagem = new System.Windows.Forms.Button();
             this.GroupBoxInformacoesServidor.SuspendLayout();
@@ -76,6 +76,7 @@
             // 
             this.TextBoxEnderecoServidor.Location = new System.Drawing.Point(81, 26);
             this.TextBoxEnderecoServidor.Name = "TextBoxEnderecoServidor";
+            this.TextBoxEnderecoServidor.PlaceholderText = "192.168.0.1";
             this.TextBoxEnderecoServidor.Size = new System.Drawing.Size(222, 23);
             this.TextBoxEnderecoServidor.TabIndex = 1;
             // 
@@ -97,19 +98,6 @@
             this.pictureBox1.TabIndex = 2;
             this.pictureBox1.TabStop = false;
             // 
-            // TextBoxHistorico
-            // 
-            this.TextBoxHistorico.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.TextBoxHistorico.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.TextBoxHistorico.Location = new System.Drawing.Point(0, 22);
-            this.TextBoxHistorico.Multiline = true;
-            this.TextBoxHistorico.Name = "TextBoxHistorico";
-            this.TextBoxHistorico.ReadOnly = true;
-            this.TextBoxHistorico.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.TextBoxHistorico.Size = new System.Drawing.Size(684, 266);
-            this.TextBoxHistorico.TabIndex = 3;
-            this.TextBoxHistorico.TextChanged += new System.EventHandler(this.TextBoxHistorico_TextChanged);
-            // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.TextBoxHistorico);
@@ -120,15 +108,28 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Mensagens";
             // 
+            // TextBoxHistorico
+            // 
+            this.TextBoxHistorico.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.TextBoxHistorico.Location = new System.Drawing.Point(0, 22);
+            this.TextBoxHistorico.Name = "TextBoxHistorico";
+            this.TextBoxHistorico.ReadOnly = true;
+            this.TextBoxHistorico.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
+            this.TextBoxHistorico.Size = new System.Drawing.Size(684, 266);
+            this.TextBoxHistorico.TabIndex = 0;
+            this.TextBoxHistorico.Text = "";
+            // 
             // TextBoxMensagem
             // 
             this.TextBoxMensagem.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.TextBoxMensagem.Location = new System.Drawing.Point(12, 392);
             this.TextBoxMensagem.Multiline = true;
             this.TextBoxMensagem.Name = "TextBoxMensagem";
+            this.TextBoxMensagem.PlaceholderText = "Digite a mensagem...";
             this.TextBoxMensagem.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal;
             this.TextBoxMensagem.Size = new System.Drawing.Size(625, 46);
             this.TextBoxMensagem.TabIndex = 5;
+            this.TextBoxMensagem.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TextBoxMensagem_KeyPress);
             // 
             // ButtonEnviarMensagem
             // 
@@ -154,12 +155,12 @@
             this.Controls.Add(this.label1);
             this.Name = "Chat";
             this.Text = "Chat";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Chat_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.GroupBoxInformacoesServidor.ResumeLayout(false);
             this.GroupBoxInformacoesServidor.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -173,9 +174,9 @@
         private TextBox TextBoxEnderecoServidor;
         private Button ButtonConectar;
         private PictureBox pictureBox1;
-        private TextBox TextBoxHistorico;
         private GroupBox groupBox1;
         private TextBox TextBoxMensagem;
         private Button ButtonEnviarMensagem;
+        private RichTextBox TextBoxHistorico;
     }
 }

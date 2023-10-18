@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace ChatLinguagensDiferentes {
     public partial class Chat : Form 
@@ -22,20 +21,17 @@ namespace ChatLinguagensDiferentes {
             var enderecoIPServidor = TextBoxEnderecoServidor.Text.Trim();
 
             if (enderecoIPServidor.Count() == 0) {
-                ShowMessageBox("Campo vazio!", "O endereço IP do servidor é obrigtório.", MessageBoxIcon.Error);
+                ShowMessageBox("Campo vazio!", "O endereço IP do servidor é obrigtório.", MessageBoxIcon.Warning);
                 return;
             }
 
-            /*// Cria um socket TCP
-            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-            var enderecoIPLocal = IPAddress.Parse(RecuperarEnderecoIPLocal());
-
-            // Define a porta local e o endereço IP
-            socket.Bind(new IPEndPoint(enderecoIPLocal, 6969));*/
-
             // Conecta ao servidor
             socket.Connect(enderecoIPServidor, 6969);
+
+            if (!socket.Connected)
+                ShowMessageBox("Erro ao conectar!", "Não foi possível conectar com o servidor.", MessageBoxIcon.Error);
+
+            ShowMessageBox("Sucesso!", "Conectado.", MessageBoxIcon.Information);
 
             // Inicia uma thread para receber mensagens
             new Thread(() => {
@@ -49,27 +45,14 @@ namespace ChatLinguagensDiferentes {
                     string mensagem = Encoding.UTF8.GetString(bytes).Trim();
 
                     // Exibe a mensagem
-                    TextBoxHistorico.Text += $"[Pedro]: {mensagem}\n";
+                    //TextBoxHistorico.Text += $"[Pedro]: {mensagem}\n";
+                    AdicionarMensagem($"[Pedro]: {mensagem}", TipoMensagem.RECEIVED);
                 }
             }).Start();
         }
 
         private void ButtonEnviarMensagem_Click(object sender, EventArgs e) {
-            /*if (socket == null || !socket.Connected) {
-                ShowMessageBox("Erro de conexão!", "Nenhuma conexão via socket foi inicializada. " +
-                    "Primeiro estabeleça conexão com o outro participante.", MessageBoxIcon.Error);
-                return;
-            }*/
-
-            string mensagem = TextBoxMensagem.Text;
-
-            // Envia a mensagem
-            //socket.Send(Encoding.UTF8.GetBytes(mensagem));
-
-            // Adiciona a minha mensagem ao histórico e limpa e campo de mensagem
-            TextBoxHistorico.Text += $"[Eu]: {mensagem}" + Environment.NewLine;
-            TextBoxMensagem.Text = "";
-            TextBoxMensagem.Focus();
+            EnviarMensagem();
         }
 
         private string RecuperarEnderecoIPLocal() {
@@ -98,29 +81,6 @@ namespace ChatLinguagensDiferentes {
             MessageBox.Show(message, title, buttons, icon);
         }
 
-        private void OnFormClosing(object sender, FormClosingEventArgs e) {
-            if (socket != null)
-                socket.Close();
-
-            Console.WriteLine("Encerrando a aplicação...");
-        }
-
-        private void AdicionarMensagem(string mensagem) {
-            // Expressão regular para encontrar nomes de usuário, assumindo que eles estão entre colchetes [Nome]
-            string pattern = @"\[(.*?)\]";
-            MatchCollection matches = Regex.Matches(mensagem, pattern);
-
-            TextBoxHistorico.Text += mensagem + Environment.NewLine;
-
-            // Define a cor para os nomes de usuário
-            foreach (Match match in matches) {
-                TextBoxHistorico.SelectionStart = TextBoxHistorico.Text.IndexOf(match.Value);
-                TextBoxHistorico.SelectionLength = match.Length;
-                //TextBoxHistorico.SelectionColor = Color.Blue;
-                TextBoxHistorico.Font = new Font(TextBoxHistorico.Font, FontStyle.Bold);
-            }
-        }
-
         private void TextBoxHistorico_TextChanged(object sender, EventArgs e) {
             // Mantém o foco no final do texto
             TextBoxHistorico.SelectionStart = TextBoxHistorico.Text.Length;
@@ -135,6 +95,68 @@ namespace ChatLinguagensDiferentes {
 
             // Define a porta local e o endereço IP
             socket.Bind(new IPEndPoint(enderecoIPLocal, 6969));
+        }
+
+        private void AdicionarMensagem(string mensagem, TipoMensagem tipo) {
+            string usuario = mensagem.Split(":")[0];
+            string conteudoMensagem = mensagem.Split(":")[1];
+            var corNomeUsuario = Color.Black;
+
+            if (tipo == TipoMensagem.SENT)
+                corNomeUsuario = Color.BlueViolet;
+            else if (tipo == TipoMensagem.RECEIVED)
+                corNomeUsuario = Color.DarkOrange;
+
+            TextBoxHistorico.SelectionStart = TextBoxHistorico.TextLength;
+            TextBoxHistorico.SelectionLength = 0;
+
+            TextBoxHistorico.SelectionColor = corNomeUsuario;
+            TextBoxHistorico.SelectionFont = new Font(TextBoxHistorico.Font, FontStyle.Bold);
+            TextBoxHistorico.AppendText(usuario + ": ");
+
+            TextBoxHistorico.SelectionColor = Color.Black;
+            TextBoxHistorico.SelectionFont = new Font(TextBoxHistorico.Font, FontStyle.Regular);
+            TextBoxHistorico.AppendText(conteudoMensagem + Environment.NewLine);
+
+            TextBoxHistorico.SelectionStart = TextBoxHistorico.TextLength;
+            TextBoxHistorico.ScrollToCaret();
+        }
+
+        private void TextBoxMensagem_KeyPress(object sender, KeyPressEventArgs e) {
+            if (e.KeyChar == (char)Keys.Enter) {
+                EnviarMensagem();
+
+                // Impede a inserção de quebra de linha
+                e.Handled = true;
+            }
+        }
+
+        private void EnviarMensagem() {
+            if (socket == null || !socket.Connected) {
+                ShowMessageBox("Erro de conexão!", "Nenhuma conexão via socket foi inicializada. " +
+                    "Primeiro estabeleça conexão com o outro participante.", MessageBoxIcon.Error);
+                return;
+            }
+
+            string mensagem = TextBoxMensagem.Text;
+
+            if (mensagem.Trim().Length == 0)
+                return;
+
+            // Envia a mensagem
+            socket.Send(Encoding.UTF8.GetBytes(mensagem));
+
+            // Adiciona a minha mensagem ao histórico e limpa e campo de mensagem
+            AdicionarMensagem($"[Eu]: {mensagem}", TipoMensagem.SENT);
+            TextBoxMensagem.Text = "";
+            TextBoxMensagem.Focus();
+        }
+
+        private void Chat_FormClosing(object sender, FormClosingEventArgs e) {
+            if (socket != null)
+                socket.Close();
+
+            Console.WriteLine("Encerrando a aplicação...");
         }
     }
 }
